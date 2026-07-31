@@ -1,5 +1,5 @@
 === Gift Vouchers for Amelia ===
-Contributors: (your wporg username)
+Contributors: glx77
 Tags: woocommerce, amelia, gift, voucher, coupon, booking
 Requires at least: 6.0
 Tested up to: 6.6
