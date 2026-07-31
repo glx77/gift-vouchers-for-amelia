@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<ruleset name="Gift Vouchers for Amelia">
+    <description>WordPress + VIP coding standards for Gift Vouchers for Amelia.</description>
+
+    <file>.</file>
+
+    <exclude-pattern>/vendor/*</exclude-pattern>
+    <exclude-pattern>/node_modules/*</exclude-pattern>
+    <exclude-pattern>/tests/*</exclude-pattern>
+
+    <arg name="extensions" value="php"/>
+    <arg name="colors"/>
+    <arg value="sp"/>
+    <arg name="parallel" value="8"/>
+
+    <config name="minimum_supported_wp_version" value="6.0"/>
+    <config name="testVersion" value="7.4-"/>
+
+    <rule ref="WordPress-Extra"/>
+    <rule ref="WordPress-VIP-Go"/>
+    <rule ref="PHPCompatibilityWP"/>
+
+    <!-- Enforce our prefix on all global symbols. -->
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+        <properties>
+            <property name="prefixes" type="array">
+                <element value="gvfa"/>
+                <element value="GVFA"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- WooCommerce capability the sniff does not know about. -->
+    <rule ref="WordPress.WP.Capabilities">
+        <properties>
+            <property name="custom_capabilities" type="array">
+                <element value="manage_woocommerce"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!--
+        The plugin's whole purpose is to read/write Amelia's custom tables,
+        which have no public API. These direct, uncached queries are intentional
+        and low-frequency (admin sync + one-off order processing), so the
+        DirectDatabaseQuery family is disabled project-wide by design.
+    -->
+    <rule ref="WordPress.DB.DirectDatabaseQuery">
+        <severity>0</severity>
+    </rule>
+
+    <!--
+        Transactional, one-off customer email. wp_mail is the correct primitive
+        here (this is not bulk mailing and not a VIP-hosted environment).
+    -->
+    <rule ref="WordPressVIPMinimum.Functions.RestrictedFunctions.wp_mail_wp_mail">
+        <severity>0</severity>
+    </rule>
+</ruleset>

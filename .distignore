@@ -1,0 +1,15 @@
+# Files excluded from the distributable plugin build.
+/.git
+/.github
+/.gitignore
+/.distignore
+/vendor
+/node_modules
+/tests
+composer.json
+composer.lock
+phpcs.xml.dist
+phpstan.neon.dist
+README.md
+.phpcs.cache
+.DS_Store
