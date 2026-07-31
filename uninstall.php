@@ -2,7 +2,7 @@
 /**
  * Uninstall cleanup.
  *
- * Only removes our own settings. Products, the "Bon cadeau" page and any
+ * Only removes our own settings. Products, the gift vouchers page and any
  * generated Amelia coupons are user data and are intentionally left intact.
  *
  * @package GiftVouchersForAmelia

@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class GVFA_Plugin {
 
 	const OPTION_KEY    = 'gvfa_settings';
-	const CATEGORY_SLUG = 'bon-cadeau';
+	const CATEGORY_SLUG = 'gift-vouchers';
 	const PAGE_OPTION   = 'gvfa_page_id';
 
 	/** @var GVFA_Plugin|null */
@@ -51,6 +51,17 @@ class GVFA_Plugin {
 	}
 
 	/**
+	 * Load the plugin translations.
+	 */
+	public static function load_textdomain() {
+		load_plugin_textdomain(
+			'gift-vouchers-for-amelia',
+			false,
+			dirname( plugin_basename( GVFA_FILE ) ) . '/languages'
+		);
+	}
+
+	/**
 	 * Default settings merged with the stored ones.
 	 *
 	 * @return array{validity_months:int, booking_url:string}
@@ -71,7 +82,7 @@ class GVFA_Plugin {
 	}
 
 	/**
-	 * @param string $key
+	 * @param string $key Setting key.
 	 * @return mixed
 	 */
 	public static function get_setting( $key ) {
@@ -90,32 +101,36 @@ class GVFA_Plugin {
 
 		$table = $wpdb->prefix . 'amelia_services';
 
-		return $wpdb->get_var(
-			$wpdb->prepare( 'SHOW TABLES LIKE %s', $table )
-		) === $table;
+		return $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table;
 	}
 
 	/**
-	 * Create the "Bon cadeau" product category and the listing page.
+	 * Create the gift-vouchers product category and the listing page.
 	 */
 	public static function activate() {
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			return;
 		}
 
+		self::load_textdomain();
+
 		// 1. Product category.
 		if ( ! term_exists( self::CATEGORY_SLUG, 'product_cat' ) ) {
-			wp_insert_term( 'Bon cadeau', 'product_cat', array( 'slug' => self::CATEGORY_SLUG ) );
+			wp_insert_term(
+				__( 'Gift Vouchers', 'gift-vouchers-for-amelia' ),
+				'product_cat',
+				array( 'slug' => self::CATEGORY_SLUG )
+			);
 		}
 
 		// 2. Listing page (only once).
 		$existing_page_id = (int) get_option( self::PAGE_OPTION, 0 );
 
-		if ( ! $existing_page_id || get_post_status( $existing_page_id ) === false ) {
+		if ( ! $existing_page_id || false === get_post_status( $existing_page_id ) ) {
 			$page_id = wp_insert_post(
 				array(
-					'post_title'   => 'Bon cadeau',
-					'post_name'    => 'bon-cadeau',
+					'post_title'   => __( 'Gift Vouchers', 'gift-vouchers-for-amelia' ),
+					'post_name'    => self::CATEGORY_SLUG,
 					'post_status'  => 'publish',
 					'post_type'    => 'page',
 					'post_content' => '[products category="' . self::CATEGORY_SLUG . '" limit="-1" columns="3" orderby="title" order="ASC"]',
@@ -129,6 +144,8 @@ class GVFA_Plugin {
 	}
 
 	public function notice_missing_woocommerce() {
-		echo '<div class="notice notice-error"><p><strong>Gift Vouchers for Amelia</strong> nécessite WooCommerce actif pour fonctionner.</p></div>';
+		echo '<div class="notice notice-error"><p>'
+			. wp_kses_post( __( '<strong>Gift Vouchers for Amelia</strong> requires WooCommerce to be active.', 'gift-vouchers-for-amelia' ) )
+			. '</p></div>';
 	}
 }

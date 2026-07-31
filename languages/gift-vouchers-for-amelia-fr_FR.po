@@ -1,0 +1,217 @@
+# French translation for Gift Vouchers for Amelia.
+msgid ""
+msgstr ""
+"Project-Id-Version: Gift Vouchers for Amelia 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr_FR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: gift-vouchers-for-amelia i18n script\n"
+
+#. Plugin Name of the plugin
+msgid "Gift Vouchers for Amelia"
+msgstr ""
+
+#. Plugin URI of the plugin
+msgid "https://github.com/glx77/gift-vouchers-for-amelia"
+msgstr ""
+
+#. Description of the plugin
+msgid "Sell gift vouchers for your Amelia services through WooCommerce. Each paid order automatically generates a single-use 100% Amelia coupon restricted to the purchased service."
+msgstr "Vendez des bons cadeaux pour vos services Amelia via WooCommerce. Chaque commande payée génère automatiquement un coupon Amelia 100% à usage unique, restreint au service acheté."
+
+#. Author of the plugin
+msgid "Glow with Lilou"
+msgstr ""
+
+#: includes/class-gvfa-admin.php:30
+#: includes/class-gvfa-admin.php:31
+#: includes/class-gvfa-admin.php:99
+#: includes/class-gvfa-plugin.php:120
+#: includes/class-gvfa-plugin.php:132
+#: includes/class-gvfa-sync.php:198
+#: includes/class-gvfa-vouchers.php:344
+msgid "Gift Vouchers"
+msgstr "Bons cadeaux"
+
+#: includes/class-gvfa-admin.php:40
+#: includes/class-gvfa-admin.php:57
+#: includes/class-gvfa-admin.php:88
+msgid "Access denied."
+msgstr "Accès refusé."
+
+#: includes/class-gvfa-admin.php:102
+msgid "Settings saved."
+msgstr "Réglages enregistrés."
+
+#. translators: 1: created count, 2: updated count, 3: drafted count, 4: total services.
+#: includes/class-gvfa-admin.php:112
+msgid "Sync complete: <strong>%1$d</strong> created, <strong>%2$d</strong> updated, <strong>%3$d</strong> set to draft (out of %4$d services)."
+msgstr "Synchronisation terminée : <strong>%1$d</strong> créé(s), <strong>%2$d</strong> mis à jour, <strong>%3$d</strong> passé(s) en brouillon (sur %4$d services)."
+
+#: includes/class-gvfa-admin.php:127
+msgid "The Amelia tables were not found. The plugin will not be able to generate coupons."
+msgstr "Les tables Amelia sont introuvables. Le plugin ne pourra pas générer de coupons."
+
+#: includes/class-gvfa-admin.php:131
+msgid "Settings"
+msgstr "Réglages"
+
+#: includes/class-gvfa-admin.php:137
+msgid "Validity duration (months)"
+msgstr "Durée de validité (mois)"
+
+#: includes/class-gvfa-admin.php:139
+msgid "How long a voucher stays valid after purchase (default: 6 months)."
+msgstr "Durée de validité d’un bon après l’achat (par défaut : 6 mois)."
+
+#: includes/class-gvfa-admin.php:141
+msgid "Booking page"
+msgstr "Page de réservation"
+
+#: includes/class-gvfa-admin.php:143
+msgid "Link included in the email so the customer can book and enter their code."
+msgstr "Lien inclus dans l’email pour que le client réserve et saisisse son code."
+
+#: includes/class-gvfa-admin.php:146
+msgid "Save settings"
+msgstr "Enregistrer les réglages"
+
+#: includes/class-gvfa-admin.php:152
+msgid "Services to offer as gift vouchers"
+msgstr "Services à proposer en bon cadeau"
+
+#: includes/class-gvfa-admin.php:154
+msgid "Tick the services you want to sell as gift vouchers. A virtual WooCommerce product (service name + price) is created and published for each checked service, in the \"Gift Vouchers\" category. <strong>Unchecking</strong> an already-published service moves its product back to <strong>draft</strong> (removed from the shop but kept — re-checking republishes it)."
+msgstr "Cochez les services que vous voulez vendre en bon cadeau. Un produit WooCommerce virtuel (nom du service + prix) est créé et publié pour chaque service coché, dans la catégorie « Bons cadeaux ». <strong>Décocher</strong> un service déjà publié repasse son produit en <strong>brouillon</strong> (retiré de la boutique mais conservé — re-cocher le republie)."
+
+#: includes/class-gvfa-admin.php:156
+msgid "Published gift voucher products:"
+msgstr "Produits bon cadeau publiés :"
+
+#: includes/class-gvfa-admin.php:161
+#: includes/class-gvfa-sync.php:98
+msgid "No visible Amelia service found."
+msgstr "Aucun service Amelia visible trouvé."
+
+#: includes/class-gvfa-admin.php:170
+#: includes/class-gvfa-vouchers.php:89
+#: includes/class-gvfa-vouchers.php:319
+msgid "Service"
+msgstr "Prestation"
+
+#: includes/class-gvfa-admin.php:171
+msgid "Price"
+msgstr "Prix"
+
+#: includes/class-gvfa-admin.php:172
+msgid "Current status"
+msgstr "État actuel"
+
+#: includes/class-gvfa-admin.php:178
+msgid "Published"
+msgstr "Publié"
+
+#: includes/class-gvfa-admin.php:181
+msgid "Draft"
+msgstr "Brouillon"
+
+#: includes/class-gvfa-admin.php:184
+msgid "Not created"
+msgstr "Non créé"
+
+#: includes/class-gvfa-admin.php:206
+msgid "Save selection"
+msgstr "Enregistrer la sélection"
+
+#: includes/class-gvfa-admin.php:215
+msgid "Public page:"
+msgstr "Page publique :"
+
+#: includes/class-gvfa-plugin.php:148
+msgid "<strong>Gift Vouchers for Amelia</strong> requires WooCommerce to be active."
+msgstr "<strong>Gift Vouchers for Amelia</strong> nécessite WooCommerce actif pour fonctionner."
+
+#: includes/class-gvfa-sync.php:80
+msgid "The Amelia tables were not found."
+msgstr "Les tables Amelia sont introuvables."
+
+#: includes/class-gvfa-sync.php:87
+msgid "Could not create the gift vouchers category."
+msgstr "Impossible de créer la catégorie des bons cadeaux."
+
+#. translators: 1: service ID, 2: service name.
+#: includes/class-gvfa-sync.php:138
+msgid "Failed to save the product for service #%1$d (%2$s)."
+msgstr "Échec de l’enregistrement du produit pour le service #%1$d (%2$s)."
+
+#: includes/class-gvfa-vouchers.php:72
+#: includes/class-gvfa-vouchers.php:87
+msgid "Gift vouchers generated"
+msgstr "Bons cadeaux générés"
+
+#. translators: 1: service name, 2: voucher code, 3: expiry date.
+#: includes/class-gvfa-vouchers.php:77
+msgid "- %1$s: %2$s (expires on %3$s)"
+msgstr "- %1$s : %2$s (expire le %3$s)"
+
+#: includes/class-gvfa-vouchers.php:90
+#: includes/class-gvfa-vouchers.php:320
+msgid "Code"
+msgstr "Code"
+
+#: includes/class-gvfa-vouchers.php:91
+msgid "Expires on"
+msgstr "Expire le"
+
+#. translators: 1: service name, 2: voucher code, 3: expiry date.
+#: includes/class-gvfa-vouchers.php:176
+msgid "%1$s → %2$s (expires on %3$s)"
+msgstr "%1$s → %2$s (expire le %3$s)"
+
+#: includes/class-gvfa-vouchers.php:185
+msgid "Gift vouchers generated:"
+msgstr "Bons cadeaux générés :"
+
+#. translators: %s: site name.
+#: includes/class-gvfa-vouchers.php:305
+msgid "Your gift voucher from %s"
+msgstr "Votre bon cadeau %s"
+
+#. translators: 1: opening link tag, 2: closing link tag.
+#: includes/class-gvfa-vouchers.php:309
+msgid "<strong>How to use it:</strong> go to %1$sour booking page%2$s, choose the matching service, then enter the code above at checkout. The discount covers 100%% of the service."
+msgstr "<strong>Comment l’utiliser :</strong> rendez-vous sur %1$snotre page de réservation%2$s, choisissez la prestation correspondante, puis saisissez le code ci-dessus au moment du paiement. La remise couvre 100%% de la prestation."
+
+#. translators: %s: customer first name.
+#: includes/class-gvfa-vouchers.php:316
+msgid "Hello %s,"
+msgstr "Bonjour %s,"
+
+#: includes/class-gvfa-vouchers.php:317
+msgid "Thank you for your order! Here are your gift voucher(s):"
+msgstr "Merci pour votre commande ! Voici votre / vos bon(s) cadeau :"
+
+#: includes/class-gvfa-vouchers.php:321
+msgid "Valid until"
+msgstr "Valable jusqu’au"
+
+#: includes/class-gvfa-vouchers.php:325
+msgid "Each code can be used only once."
+msgstr "Chaque code est utilisable une seule fois."
+
+#: includes/class-gvfa-vouchers.php:326
+msgid "See you soon,"
+msgstr "À très vite,"
+
+#: includes/class-gvfa-vouchers.php:366
+msgid "No voucher generated for this order."
+msgstr "Aucun bon généré pour cette commande."
+
+#. translators: %s: expiry date.
+#: includes/class-gvfa-vouchers.php:379
+msgid "Expires on %s"
+msgstr "Expire le %s"
+

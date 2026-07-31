@@ -77,14 +77,14 @@ class GVFA_Sync {
 		);
 
 		if ( ! GVFA_Plugin::amelia_active() ) {
-			$result['errors'][] = 'Les tables Amelia sont introuvables.';
+			$result['errors'][] = __( 'The Amelia tables were not found.', 'gift-vouchers-for-amelia' );
 			return $result;
 		}
 
 		$category_id = $this->ensure_category();
 
 		if ( ! $category_id ) {
-			$result['errors'][] = 'Impossible de créer la catégorie « Bon cadeau ».';
+			$result['errors'][] = __( 'Could not create the gift vouchers category.', 'gift-vouchers-for-amelia' );
 			return $result;
 		}
 
@@ -95,7 +95,7 @@ class GVFA_Sync {
 		);
 
 		if ( ! $services ) {
-			$result['errors'][] = 'Aucun service Amelia visible trouvé.';
+			$result['errors'][] = __( 'No visible Amelia service found.', 'gift-vouchers-for-amelia' );
 			return $result;
 		}
 
@@ -133,7 +133,12 @@ class GVFA_Sync {
 				$product_id = $product->save();
 
 				if ( ! $product_id ) {
-					$result['errors'][] = "Échec d'enregistrement pour le service #{$sid} ({$service->name}).";
+					$result['errors'][] = sprintf(
+						/* translators: 1: service ID, 2: service name. */
+						__( 'Failed to save the product for service #%1$d (%2$s).', 'gift-vouchers-for-amelia' ),
+						$sid,
+						$service->name
+					);
 					continue;
 				}
 
@@ -190,7 +195,7 @@ class GVFA_Sync {
 			return (int) $term->term_id;
 		}
 
-		$created = wp_insert_term( 'Bon cadeau', 'product_cat', array( 'slug' => GVFA_Plugin::CATEGORY_SLUG ) );
+		$created = wp_insert_term( __( 'Gift Vouchers', 'gift-vouchers-for-amelia' ), 'product_cat', array( 'slug' => GVFA_Plugin::CATEGORY_SLUG ) );
 
 		if ( is_wp_error( $created ) ) {
 			return 0;

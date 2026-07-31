@@ -34,7 +34,7 @@ The recipient books the service in Amelia and enters the code: the discount cove
 1. Upload the plugin folder to `wp-content/plugins/`, or install the ZIP via Plugins → Add New → Upload.
 2. Activate the plugin.
 3. Go to **WooCommerce → Gift Vouchers**: set the validity duration and the booking page URL, then tick the services to offer and save.
-4. The public vouchers page is available at `/bon-cadeau/`.
+4. The public vouchers page is available at `/gift-vouchers/`.
 
 == Frequently Asked Questions ==
 
@@ -53,4 +53,4 @@ No. Only the plugin's own option is removed. Products, the vouchers page and gen
 == Changelog ==
 
 = 1.0.0 =
-* Initial release: Amelia service to WooCommerce product sync (checkbox list), automatic 100% Amelia coupon generation on paid orders, buyer email, code(s) added to the admin "New order" email, quantity locked to 1, vouchers page.
+* Initial release: Amelia service to WooCommerce product sync (checkbox list), automatic 100% Amelia coupon generation on paid orders, buyer email, code(s) added to the admin "New order" email, quantity locked to 1, vouchers page. Fully translatable (English default, French translation bundled).

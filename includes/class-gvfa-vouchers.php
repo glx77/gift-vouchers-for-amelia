@@ -69,11 +69,12 @@ class GVFA_Vouchers {
 		}
 
 		if ( $plain_text ) {
-			echo "\n\n" . '=== Bons cadeaux générés ===' . "\n";
+			echo "\n\n" . esc_html__( 'Gift vouchers generated', 'gift-vouchers-for-amelia' ) . "\n";
 			foreach ( $codes as $c ) {
 				echo esc_html(
 					sprintf(
-						'- %s : %s (expire le %s)',
+						/* translators: 1: service name, 2: voucher code, 3: expiry date. */
+						__( '- %1$s: %2$s (expires on %3$s)', 'gift-vouchers-for-amelia' ),
 						$c['product_name'] ?? '',
 						$c['code'] ?? '',
 						$c['expires_display'] ?? ''
@@ -83,11 +84,11 @@ class GVFA_Vouchers {
 			return;
 		}
 
-		echo '<h2>Bons cadeaux générés</h2>';
+		echo '<h2>' . esc_html__( 'Gift vouchers generated', 'gift-vouchers-for-amelia' ) . '</h2>';
 		echo '<table cellspacing="0" cellpadding="6" style="width:100%;border:1px solid #eee;margin-bottom:20px;">';
-		echo '<tr><th style="text-align:left;border:1px solid #eee;">Prestation</th>'
-			. '<th style="text-align:left;border:1px solid #eee;">Code</th>'
-			. '<th style="text-align:left;border:1px solid #eee;">Expire le</th></tr>';
+		echo '<tr><th style="text-align:left;border:1px solid #eee;">' . esc_html__( 'Service', 'gift-vouchers-for-amelia' ) . '</th>'
+			. '<th style="text-align:left;border:1px solid #eee;">' . esc_html__( 'Code', 'gift-vouchers-for-amelia' ) . '</th>'
+			. '<th style="text-align:left;border:1px solid #eee;">' . esc_html__( 'Expires on', 'gift-vouchers-for-amelia' ) . '</th></tr>';
 		foreach ( $codes as $c ) {
 			echo '<tr>'
 				. '<td style="border:1px solid #eee;">' . esc_html( $c['product_name'] ?? '' ) . '</td>'
@@ -170,12 +171,18 @@ class GVFA_Vouchers {
 
 		$lines = array_map(
 			function ( $c ) {
-				return sprintf( '%s → %s (expire le %s)', $c['product_name'], $c['code'], $c['expires_display'] );
+				return sprintf(
+					/* translators: 1: service name, 2: voucher code, 3: expiry date. */
+					__( '%1$s → %2$s (expires on %3$s)', 'gift-vouchers-for-amelia' ),
+					$c['product_name'],
+					$c['code'],
+					$c['expires_display']
+				);
 			},
 			$generated
 		);
 
-		$order->add_order_note( "Bons cadeaux générés :\n" . implode( "\n", $lines ) );
+		$order->add_order_note( __( 'Gift vouchers generated:', 'gift-vouchers-for-amelia' ) . "\n" . implode( "\n", $lines ) );
 
 		$this->send_email( $order, $generated );
 	}
@@ -294,22 +301,29 @@ class GVFA_Vouchers {
 				. '</tr>';
 		}
 
-		$subject = 'Votre bon cadeau ' . get_bloginfo( 'name' );
+		/* translators: %s: site name. */
+		$subject = sprintf( __( 'Your gift voucher from %s', 'gift-vouchers-for-amelia' ), get_bloginfo( 'name' ) );
+
+		$how_to = sprintf(
+			/* translators: 1: opening link tag, 2: closing link tag. */
+			__( '<strong>How to use it:</strong> go to %1$sour booking page%2$s, choose the matching service, then enter the code above at checkout. The discount covers 100%% of the service.', 'gift-vouchers-for-amelia' ),
+			'<a href="' . esc_url( $booking_url ) . '">',
+			'</a>'
+		);
 
 		$message = '<div style="font-family:Arial,sans-serif;font-size:15px;color:#333;max-width:600px;">'
-			. '<p>Bonjour ' . esc_html( $first_name ) . ',</p>'
-			. '<p>Merci pour votre commande ! Voici votre / vos bon(s) cadeau :</p>'
+			/* translators: %s: customer first name. */
+			. '<p>' . esc_html( sprintf( __( 'Hello %s,', 'gift-vouchers-for-amelia' ), $first_name ) ) . '</p>'
+			. '<p>' . esc_html__( 'Thank you for your order! Here are your gift voucher(s):', 'gift-vouchers-for-amelia' ) . '</p>'
 			. '<table style="border-collapse:collapse;margin:16px 0;">'
-			. '<tr><th style="padding:8px 12px;border:1px solid #eee;text-align:left;">Prestation</th>'
-			. '<th style="padding:8px 12px;border:1px solid #eee;text-align:left;">Code</th>'
-			. '<th style="padding:8px 12px;border:1px solid #eee;text-align:left;">Valable jusqu\'au</th></tr>'
+			. '<tr><th style="padding:8px 12px;border:1px solid #eee;text-align:left;">' . esc_html__( 'Service', 'gift-vouchers-for-amelia' ) . '</th>'
+			. '<th style="padding:8px 12px;border:1px solid #eee;text-align:left;">' . esc_html__( 'Code', 'gift-vouchers-for-amelia' ) . '</th>'
+			. '<th style="padding:8px 12px;border:1px solid #eee;text-align:left;">' . esc_html__( 'Valid until', 'gift-vouchers-for-amelia' ) . '</th></tr>'
 			. $rows
 			. '</table>'
-			. '<p><strong>Comment l\'utiliser :</strong> rendez-vous sur <a href="' . esc_url( $booking_url ) . '">notre page de réservation</a>, '
-			. 'choisissez la prestation correspondante, puis saisissez le code ci-dessus au moment du paiement. '
-			. 'La remise couvre 100% de la prestation.</p>'
-			. '<p>Chaque code est utilisable une seule fois.</p>'
-			. '<p>À très vite,<br>' . esc_html( get_bloginfo( 'name' ) ) . '</p>'
+			. '<p>' . wp_kses_post( $how_to ) . '</p>'
+			. '<p>' . esc_html__( 'Each code can be used only once.', 'gift-vouchers-for-amelia' ) . '</p>'
+			. '<p>' . esc_html__( 'See you soon,', 'gift-vouchers-for-amelia' ) . '<br>' . esc_html( get_bloginfo( 'name' ) ) . '</p>'
 			. '</div>';
 
 		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
@@ -327,7 +341,7 @@ class GVFA_Vouchers {
 
 		add_meta_box(
 			'gvfa_order_vouchers',
-			'Bons cadeaux',
+			__( 'Gift Vouchers', 'gift-vouchers-for-amelia' ),
 			array( $this, 'render_order_meta_box' ),
 			$screen,
 			'side',
@@ -349,17 +363,23 @@ class GVFA_Vouchers {
 		$codes = $order->get_meta( self::ORDER_CODES );
 
 		if ( ! is_array( $codes ) || ! $codes ) {
-			echo '<p>Aucun bon généré pour cette commande.</p>';
+			echo '<p>' . esc_html__( 'No voucher generated for this order.', 'gift-vouchers-for-amelia' ) . '</p>';
 			return;
 		}
 
 		echo '<ul style="margin:0;">';
 		foreach ( $codes as $c ) {
 			printf(
-				'<li><strong>%s</strong><br><code>%s</code><br><small>Expire le %s</small></li>',
+				'<li><strong>%1$s</strong><br><code>%2$s</code><br><small>%3$s</small></li>',
 				esc_html( $c['product_name'] ?? '' ),
 				esc_html( $c['code'] ?? '' ),
-				esc_html( $c['expires_display'] ?? '' )
+				esc_html(
+					sprintf(
+						/* translators: %s: expiry date. */
+						__( 'Expires on %s', 'gift-vouchers-for-amelia' ),
+						$c['expires_display'] ?? ''
+					)
+				)
 			);
 		}
 		echo '</ul>';

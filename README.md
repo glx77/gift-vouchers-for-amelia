@@ -51,7 +51,7 @@ Amelia natively enforces the expiry date, the single-use limit (it counts the bo
 3. Open **WooCommerce → Gift Vouchers** and:
    - set the **validity duration** (default 6 months) and the **booking page URL**;
    - tick the services you want to sell as vouchers and **save** (this creates/publishes one WooCommerce product per checked service).
-4. The public listing page is created automatically at `/bon-cadeau/`.
+4. The public listing page is created automatically at `/gift-vouchers/`.
 
 ## Configuration
 
@@ -83,6 +83,15 @@ CI runs the same checks on every push / pull request (see `.github/workflows/ci.
 - **PHPCS** with `WordPress-Extra` + `WordPress-Docs` + `WordPress-VIP-Go`.
   The plugin reads and writes Amelia's custom tables directly (Amelia exposes no public API for coupons); those unavoidable direct queries are annotated with justified `phpcs:ignore` comments.
 - **PHPStan** (level in `phpstan.neon.dist`) with WordPress and WooCommerce stubs.
+
+## Translations
+
+The plugin is written in English and is fully translatable (text domain `gift-vouchers-for-amelia`). Translation files live in `languages/`:
+
+- `gift-vouchers-for-amelia.pot` — template
+- `gift-vouchers-for-amelia-fr_FR.po` / `.mo` — French translation (bundled)
+
+To add a language, copy the `.pot` to `gift-vouchers-for-amelia-{locale}.po`, translate, and compile with `wp i18n make-mo languages/` (or `msgfmt`). To regenerate the template after changing strings: `wp i18n make-pot . languages/gift-vouchers-for-amelia.pot`.
 
 ## Uninstall
 
