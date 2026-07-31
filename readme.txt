@@ -50,6 +50,11 @@ No. Expiry and single-use are enforced natively by Amelia.
 
 No. Only the plugin's own option is removed. Products, the vouchers page and generated coupons are kept.
 
+== Screenshots ==
+
+1. Admin: pick the Amelia services to sell as gift vouchers.
+2. The email a buyer receives, containing the gift code.
+
 == Changelog ==
 
 = 1.0.0 =
