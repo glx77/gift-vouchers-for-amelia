@@ -6,6 +6,8 @@
 /vendor
 /node_modules
 /tests
+/RENAME.md
+/.wordpress-org
 composer.json
 composer.lock
 phpcs.xml.dist

@@ -1,14 +1,14 @@
 === Gift Vouchers for Amelia ===
 Contributors: glx77
-Tags: woocommerce, amelia, gift, voucher, coupon, booking
+Tags: gift voucher, gift card, amelia, woocommerce, coupon
 Requires at least: 6.0
-Tested up to: 6.6
+Tested up to: 7.0
 Requires PHP: 7.4
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Sell gift vouchers for your Amelia services through WooCommerce. Each paid order automatically creates a 100% Amelia coupon restricted to the purchased service.
+Sell gift vouchers for your Amelia services via WooCommerce; each paid order auto-creates a single-use 100% Amelia coupon.
 
 == Description ==
 

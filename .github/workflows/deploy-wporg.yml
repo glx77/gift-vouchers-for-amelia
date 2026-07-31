@@ -1,0 +1,26 @@
+name: Deploy to WordPress.org
+
+# Runs on plain version tags (e.g. 1.0.1) — WITHOUT the "v" prefix, because the
+# SVN tag created on WordPress.org must match the "Stable tag" in readme.txt.
+# (GitHub releases run from v-prefixed OR plain tags; see release.yml.)
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  deploy:
+    name: Deploy to WordPress.org SVN
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: WordPress.org plugin deploy
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: gift-vouchers-for-amelia
+          # Files to exclude from the SVN trunk/tag are read from .distignore.
+          # Store banners/icons/screenshots in .wordpress-org/ (ASSETS_DIR).
+          ASSETS_DIR: .wordpress-org
