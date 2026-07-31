@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & publish release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build distributable zip
+        run: |
+          PLUGIN=gift-vouchers-for-amelia
+          mkdir -p "/tmp/build/$PLUGIN"
+          rsync -a --exclude='.git' --exclude-from='.distignore' ./ "/tmp/build/$PLUGIN/"
+          ( cd /tmp/build && zip -r "$GITHUB_WORKSPACE/$PLUGIN.zip" "$PLUGIN" )
+          echo "--- zip contents ---"
+          unzip -l "$PLUGIN.zip"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: gift-vouchers-for-amelia.zip
+          generate_release_notes: true
