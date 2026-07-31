@@ -205,6 +205,7 @@ class GVFA_Vouchers {
 
 		$code = $this->unique_code();
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
 		$inserted = $wpdb->insert(
 			$wpdb->prefix . 'amelia_coupons',
 			array(
@@ -231,6 +232,7 @@ class GVFA_Vouchers {
 
 		$coupon_id = (int) $wpdb->insert_id;
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
 		$linked = $wpdb->insert(
 			$wpdb->prefix . 'amelia_coupons_to_services',
 			array(
@@ -242,6 +244,7 @@ class GVFA_Vouchers {
 
 		if ( ! $linked ) {
 			// Roll back the orphan coupon so it can never apply to everything.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
 			$wpdb->delete( $wpdb->prefix . 'amelia_coupons', array( 'id' => $coupon_id ), array( '%d' ) );
 			return null;
 		}
@@ -265,8 +268,9 @@ class GVFA_Vouchers {
 		$prefix = apply_filters( 'gvfa_code_prefix', 'GIFT-' );
 
 		do {
-			$code   = $prefix . strtoupper( wp_generate_password( 4, false, false ) )
+			$code = $prefix . strtoupper( wp_generate_password( 4, false, false ) )
 					. '-' . strtoupper( wp_generate_password( 4, false, false ) );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
 			$exists = $wpdb->get_var(
 				$wpdb->prepare(
 					"SELECT id FROM {$wpdb->prefix}amelia_coupons WHERE code = %s LIMIT 1",
@@ -328,6 +332,7 @@ class GVFA_Vouchers {
 
 		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
 
+		// phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.wp_mail_wp_mail -- Transactional, one-off customer email; wp_mail is the correct primitive (not bulk mailing).
 		wp_mail( $to, $subject, $message, $headers );
 	}
 

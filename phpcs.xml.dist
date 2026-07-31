@@ -40,20 +40,9 @@
     </rule>
 
     <!--
-        The plugin's whole purpose is to read/write Amelia's custom tables,
-        which have no public API. These direct, uncached queries are intentional
-        and low-frequency (admin sync + one-off order processing), so the
-        DirectDatabaseQuery family is disabled project-wide by design.
+        Direct Amelia-table queries and the transactional wp_mail() call are
+        intentional. They are annotated with justified inline `phpcs:ignore`
+        comments in the code (so WordPress.org Plugin Check honors them too),
+        rather than disabled globally here.
     -->
-    <rule ref="WordPress.DB.DirectDatabaseQuery">
-        <severity>0</severity>
-    </rule>
-
-    <!--
-        Transactional, one-off customer email. wp_mail is the correct primitive
-        here (this is not bulk mailing and not a VIP-hosted environment).
-    -->
-    <rule ref="WordPressVIPMinimum.Functions.RestrictedFunctions.wp_mail_wp_mail">
-        <severity>0</severity>
-    </rule>
 </ruleset>

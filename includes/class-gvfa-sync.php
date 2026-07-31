@@ -30,6 +30,7 @@ class GVFA_Sync {
 			return array();
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
 		$services = $wpdb->get_results(
 			"SELECT id, name, price FROM {$wpdb->prefix}amelia_services WHERE status = 'visible' ORDER BY name ASC"
 		);
@@ -90,6 +91,7 @@ class GVFA_Sync {
 
 		$checked_ids = array_map( 'intval', (array) $checked_ids );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
 		$services = $wpdb->get_results(
 			"SELECT id, name, price FROM {$wpdb->prefix}amelia_services WHERE status = 'visible' ORDER BY name ASC"
 		);
@@ -169,6 +171,7 @@ class GVFA_Sync {
 	public function find_product_by_service( $service_id ) {
 		global $wpdb;
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
 		$post_id = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT pm.post_id
@@ -212,6 +215,7 @@ class GVFA_Sync {
 	public function count_voucher_products() {
 		global $wpdb;
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*)

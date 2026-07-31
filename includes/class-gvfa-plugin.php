@@ -54,6 +54,7 @@ class GVFA_Plugin {
 	 * Load the plugin translations.
 	 */
 	public static function load_textdomain() {
+		// phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- Kept so the bundled translations load on WP < 6.7, where just-in-time loading does not read the plugin's own /languages folder.
 		load_plugin_textdomain(
 			'gift-vouchers-for-amelia',
 			false,
@@ -101,6 +102,7 @@ class GVFA_Plugin {
 
 		$table = $wpdb->prefix . 'amelia_services';
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
 		return $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table;
 	}
 

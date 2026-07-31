@@ -11,6 +11,7 @@
  * Requires PHP:      7.4
  * Requires Plugins:  woocommerce
  * Text Domain:       gift-vouchers-for-amelia
+ * Domain Path:       /languages
  *
  * @package GiftVouchersForAmelia
  */
