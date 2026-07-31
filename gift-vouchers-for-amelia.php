@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Gift Vouchers for Amelia
- * Plugin URI:        https://github.com/glx77/-gift-vouchers-for-amelia-
+ * Plugin URI:        https://github.com/glx77/gift-vouchers-for-amelia
  * Description:        Vend des bons cadeaux (produits WooCommerce dupliqués depuis les services Amelia) et génère automatiquement un coupon Amelia 100% à chaque commande payée.
  * Version:           1.0.0
  * Author:            Glow with Lilou
