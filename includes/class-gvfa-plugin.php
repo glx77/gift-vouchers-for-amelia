@@ -65,12 +65,15 @@ class GVFA_Plugin {
 	/**
 	 * Default settings merged with the stored ones.
 	 *
-	 * @return array{validity_months:int, booking_url:string}
+	 * @return array{validity_months:int, booking_url:string, voucher_attach:int, voucher_message:string, voucher_contact:string}
 	 */
 	public static function get_settings() {
 		$defaults = array(
 			'validity_months' => 6,
 			'booking_url'     => home_url( '/reservation/' ),
+			'voucher_attach'  => 1,
+			'voucher_message' => "Une expérience dédiée à la confiance en soi et à la mise en valeur grâce à un accompagnement personnalisé.\n\nValable {months} mois à compter de la date d'achat.\n\nRéservation en ligne en renseignant le code cadeau lors de la réservation.\n\nBon cadeau non remboursable et non échangeable.",
+			'voucher_contact' => "Contact : 07 75 22 49 63\nGlowwithlilou.com",
 		);
 
 		$stored = get_option( self::OPTION_KEY, array() );

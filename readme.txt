@@ -58,4 +58,4 @@ No. Only the plugin's own option is removed. Products, the vouchers page and gen
 == Changelog ==
 
 = 1.0.0 =
-* Initial release: Amelia service to WooCommerce product sync (checkbox list), automatic 100% Amelia coupon generation on paid orders, buyer email, code(s) added to the admin "New order" email, quantity locked to 1, vouchers page. Fully translatable (English default, French translation bundled).
+* Initial release: Amelia service to WooCommerce product sync (checkbox list), automatic 100% Amelia coupon generation on paid orders, buyer email, code(s) added to the admin "New order" email, quantity locked to 1, vouchers page, optional printable gift-voucher image (configurable message) attached to the buyer email. Fully translatable (English default, French translation bundled).

@@ -330,10 +330,49 @@ class GVFA_Vouchers {
 			. '<p>' . esc_html__( 'See you soon,', 'gift-vouchers-for-amelia' ) . '<br>' . esc_html( get_bloginfo( 'name' ) ) . '</p>'
 			. '</div>';
 
-		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
+		$headers     = array( 'Content-Type: text/html; charset=UTF-8' );
+		$attachments = $this->build_attachments( $vouchers );
 
 		// phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.wp_mail_wp_mail -- Transactional, one-off customer email; wp_mail is the correct primitive (not bulk mailing).
-		wp_mail( $to, $subject, $message, $headers );
+		wp_mail( $to, $subject, $message, $headers, $attachments );
+
+		// The generated images live in a temp folder; remove them once sent.
+		foreach ( $attachments as $attachment ) {
+			wp_delete_file( $attachment );
+		}
+	}
+
+	/**
+	 * Build the printable voucher image(s) to attach, one per code.
+	 *
+	 * @param array $vouchers
+	 * @return string[] Absolute file paths.
+	 */
+	private function build_attachments( $vouchers ) {
+		if ( ! GVFA_Plugin::get_setting( 'voucher_attach' ) ) {
+			return array();
+		}
+
+		$generator = new GVFA_Voucher_Image();
+		$months    = max( 1, (int) GVFA_Plugin::get_setting( 'validity_months' ) );
+		$files     = array();
+
+		foreach ( $vouchers as $v ) {
+			$file = $generator->generate(
+				array(
+					'prestation'      => $v['product_name'] ?? '',
+					'code'            => $v['code'] ?? '',
+					'months'          => $months,
+					'expires_display' => $v['expires_display'] ?? '',
+				)
+			);
+
+			if ( $file ) {
+				$files[] = $file;
+			}
+		}
+
+		return $files;
 	}
 
 	// -- Order admin display -------------------------------------------------

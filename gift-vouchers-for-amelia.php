@@ -27,6 +27,7 @@ define( 'GVFA_URL', plugin_dir_url( __FILE__ ) );
 
 require_once GVFA_DIR . 'includes/class-gvfa-plugin.php';
 require_once GVFA_DIR . 'includes/class-gvfa-sync.php';
+require_once GVFA_DIR . 'includes/class-gvfa-voucher-image.php';
 require_once GVFA_DIR . 'includes/class-gvfa-vouchers.php';
 require_once GVFA_DIR . 'includes/class-gvfa-admin.php';
 

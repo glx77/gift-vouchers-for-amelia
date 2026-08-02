@@ -66,6 +66,11 @@ All settings live under **WooCommerce → Gift Vouchers**:
 | Filter | Default | Description |
 |---|---|---|
 | `gvfa_code_prefix` | `GIFT-` | Prefix used for generated coupon codes. |
+| `gvfa_voucher_background` | bundled JPG | Path to the printable-voucher background image (JPEG or PNG). |
+
+### Printable voucher
+
+When enabled (WooCommerce → Gift Vouchers), a gold gift-voucher **image** is generated per code (GD, over the bundled background in `assets/`) and attached to the buyer email. The message and footer are editable in the settings; use `{months}` in the message for the validity duration. Requires the PHP GD extension with FreeType.
 
 ## Development
 

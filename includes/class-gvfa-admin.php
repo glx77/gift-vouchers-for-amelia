@@ -45,6 +45,9 @@ class GVFA_Admin {
 		$settings = array(
 			'validity_months' => max( 1, absint( wp_unslash( $_POST['validity_months'] ?? 6 ) ) ),
 			'booking_url'     => esc_url_raw( wp_unslash( $_POST['booking_url'] ?? '' ) ),
+			'voucher_attach'  => isset( $_POST['voucher_attach'] ) ? 1 : 0,
+			'voucher_message' => sanitize_textarea_field( wp_unslash( $_POST['voucher_message'] ?? '' ) ),
+			'voucher_contact' => sanitize_textarea_field( wp_unslash( $_POST['voucher_contact'] ?? '' ) ),
 		);
 
 		update_option( GVFA_Plugin::OPTION_KEY, $settings );
@@ -141,6 +144,17 @@ class GVFA_Admin {
 		echo '<tr><th scope="row"><label for="gvfa_booking">' . esc_html__( 'Booking page', 'gift-vouchers-for-amelia' ) . '</label></th>';
 		echo '<td><input name="booking_url" id="gvfa_booking" type="url" value="' . esc_attr( $settings['booking_url'] ) . '" class="regular-text"> '
 			. '<p class="description">' . esc_html__( 'Link included in the email so the customer can book and enter their code.', 'gift-vouchers-for-amelia' ) . '</p></td></tr>';
+
+		echo '<tr><th scope="row">' . esc_html__( 'Printable voucher', 'gift-vouchers-for-amelia' ) . '</th>';
+		echo '<td><label><input type="checkbox" name="voucher_attach" value="1" ' . checked( ! empty( $settings['voucher_attach'] ), true, false ) . '> '
+			. esc_html__( 'Attach a printable gift voucher (image) to the buyer email.', 'gift-vouchers-for-amelia' ) . '</label></td></tr>';
+
+		echo '<tr><th scope="row"><label for="gvfa_voucher_message">' . esc_html__( 'Voucher message', 'gift-vouchers-for-amelia' ) . '</label></th>';
+		echo '<td><textarea name="voucher_message" id="gvfa_voucher_message" rows="6" class="large-text">' . esc_textarea( $settings['voucher_message'] ) . '</textarea>'
+			. '<p class="description">' . esc_html__( 'Text printed on the voucher. Use {months} for the validity duration.', 'gift-vouchers-for-amelia' ) . '</p></td></tr>';
+
+		echo '<tr><th scope="row"><label for="gvfa_voucher_contact">' . esc_html__( 'Voucher footer / contact', 'gift-vouchers-for-amelia' ) . '</label></th>';
+		echo '<td><textarea name="voucher_contact" id="gvfa_voucher_contact" rows="2" class="large-text">' . esc_textarea( $settings['voucher_contact'] ) . '</textarea></td></tr>';
 
 		echo '</tbody></table>';
 		submit_button( __( 'Save settings', 'gift-vouchers-for-amelia' ) );
