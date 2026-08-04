@@ -51,18 +51,6 @@ class GVFA_Plugin {
 	}
 
 	/**
-	 * Load the plugin translations.
-	 */
-	public static function load_textdomain() {
-		// phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- Kept so the bundled translations load on WP < 6.7, where just-in-time loading does not read the plugin's own /languages folder.
-		load_plugin_textdomain(
-			'gift-vouchers-for-amelia',
-			false,
-			dirname( plugin_basename( GVFA_FILE ) ) . '/languages'
-		);
-	}
-
-	/**
 	 * Default settings merged with the stored ones.
 	 *
 	 * @return array{validity_months:int, booking_url:string, voucher_attach:int, voucher_message:string, voucher_contact:string}
@@ -116,8 +104,6 @@ class GVFA_Plugin {
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			return;
 		}
-
-		self::load_textdomain();
 
 		// 1. Product category.
 		if ( ! term_exists( self::CATEGORY_SLUG, 'product_cat' ) ) {

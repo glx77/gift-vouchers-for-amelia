@@ -41,9 +41,6 @@ add_action(
 	}
 );
 
-// Load translations.
-add_action( 'init', array( 'GVFA_Plugin', 'load_textdomain' ) );
-
 // Boot once all plugins are loaded (so WooCommerce is available).
 add_action( 'plugins_loaded', array( 'GVFA_Plugin', 'instance' ) );
 
