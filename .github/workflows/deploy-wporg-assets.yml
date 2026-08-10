@@ -1,0 +1,30 @@
+name: Deploy assets & readme to WordPress.org
+
+# Syncs the plugin page assets (icon, banner, screenshots) and the readme to
+# the SVN repo WITHOUT cutting a new release. Runs whenever those files change
+# on main. Files removed from .wordpress-org are removed from SVN assets too.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.wordpress-org/**'
+      - 'readme.txt'
+
+permissions:
+  contents: read
+
+jobs:
+  assets:
+    name: Update assets & readme
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: WordPress.org assets update
+        uses: 10up/action-wordpress-plugin-asset-update@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: gift-vouchers-for-amelia
+          ASSETS_DIR: .wordpress-org
