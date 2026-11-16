@@ -3,10 +3,15 @@
  * Generates Amelia coupons when a gift-voucher order is paid, and emails
  * the buyer with the code(s).
  *
- * A voucher = an Amelia coupon: 100% discount, restricted to one service,
- * single use (limit = 1), expiring after N months. Amelia natively enforces
- * expiry, single-use (it counts bookings referencing the coupon) and the
- * service restriction — so we only need to insert the rows correctly.
+ * A voucher = an Amelia coupon, single use (limit = 1), expiring after N
+ * months, restricted to one service or one event series:
+ *  - service: 100% discount;
+ *  - event: fixed deduction worth one place. Amelia multiplies the event
+ *    price by the number of persons booked, so a 100% discount would make
+ *    every extra place free as well.
+ * Amelia natively enforces expiry, single-use (it counts bookings referencing
+ * the coupon) and the entity restriction — so we only need to insert the rows
+ * correctly.
  *
  * @package GiftVouchersForAmelia
  */
@@ -141,15 +146,18 @@ class GVFA_Vouchers {
 			}
 
 			$service_id = (int) $product->get_meta( GVFA_Sync::META_SERVICE_ID );
+			$event_id   = (int) $product->get_meta( GVFA_Sync::META_EVENT_ID );
 
-			if ( ! $service_id ) {
+			if ( ! $service_id && ! $event_id ) {
 				continue; // Not a voucher product.
 			}
 
 			$quantity = max( 1, (int) $item->get_quantity() );
 
 			for ( $i = 0; $i < $quantity; $i++ ) {
-				$coupon = $this->create_coupon( $service_id, $months );
+				$coupon = $service_id
+					? $this->create_coupon( 'service', $service_id, $months )
+					: $this->create_coupon( 'event', $event_id, $months, (float) $product->get_regular_price() );
 
 				if ( $coupon ) {
 					$coupon['product_name'] = $product->get_name();
@@ -188,14 +196,20 @@ class GVFA_Vouchers {
 	}
 
 	/**
-	 * Insert a single-use, 100%, service-restricted Amelia coupon.
+	 * Insert a single-use Amelia coupon restricted to one service or event series.
 	 *
-	 * @param int $service_id
-	 * @param int $months
+	 * @param string $type      'service' or 'event'.
+	 * @param int    $entity_id Amelia service ID or event series (root) ID.
+	 * @param int    $months
+	 * @param float  $value     Event only: amount deducted (one place).
 	 * @return array{code:string, expires:string, expires_display:string, coupon_id:int}|null
 	 */
-	private function create_coupon( $service_id, $months ) {
+	private function create_coupon( $type, $entity_id, $months, $value = 0.0 ) {
 		global $wpdb;
+
+		// Event with a known place price: fixed deduction (see class doc).
+		// Otherwise (service, or free/unknown price): 100% discount.
+		$fixed = ( 'event' === $type && $value > 0 );
 
 		// Amelia compares coupon dates against UTC (getNowDateTimeInUtc), so we
 		// must store them in UTC too. startDate is left NULL: a gift voucher is
@@ -210,8 +224,8 @@ class GVFA_Vouchers {
 			$wpdb->prefix . 'amelia_coupons',
 			array(
 				'code'                  => $code,
-				'discount'              => 100,
-				'deduction'             => 0,
+				'discount'              => $fixed ? 0 : 100,
+				'deduction'             => $fixed ? $value : 0,
 				'limit'                 => 1,
 				'customerLimit'         => 0,
 				'status'                => 'visible',
@@ -223,7 +237,7 @@ class GVFA_Vouchers {
 				'allEvents'             => 0,
 				'allPackages'           => 0,
 			),
-			array( '%s', '%d', '%d', '%d', '%d', '%s', '%d', '%d', '%s', '%s', '%d', '%d', '%d' )
+			array( '%s', '%d', '%f', '%d', '%d', '%s', '%d', '%d', '%s', '%s', '%d', '%d', '%d' )
 		);
 
 		if ( ! $inserted ) {
@@ -232,15 +246,19 @@ class GVFA_Vouchers {
 
 		$coupon_id = (int) $wpdb->insert_id;
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
-		$linked = $wpdb->insert(
-			$wpdb->prefix . 'amelia_coupons_to_services',
-			array(
-				'couponId'  => $coupon_id,
-				'serviceId' => $service_id,
-			),
-			array( '%d', '%d' )
-		);
+		if ( 'event' === $type ) {
+			$linked = $this->link_coupon_to_event_series( $coupon_id, $entity_id );
+		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
+			$linked = $wpdb->insert(
+				$wpdb->prefix . 'amelia_coupons_to_services',
+				array(
+					'couponId'  => $coupon_id,
+					'serviceId' => $entity_id,
+				),
+				array( '%d', '%d' )
+			);
+		}
 
 		if ( ! $linked ) {
 			// Roll back the orphan coupon so it can never apply to everything.
@@ -257,6 +275,34 @@ class GVFA_Vouchers {
 			// (floored to 23:59:59), so display that exact date.
 			'expires_display' => $exp->format( 'd/m/Y' ),
 		);
+	}
+
+	/**
+	 * Link a coupon to every occurrence of an event series.
+	 *
+	 * Amelia checks the coupon against the ID of the occurrence being booked,
+	 * and each occurrence of a recurring event is its own row (parentId =
+	 * root ID), so the coupon must be linked to all of them.
+	 *
+	 * @param int $coupon_id
+	 * @param int $series_id Root event ID.
+	 * @return int Number of occurrences linked (0 = failure).
+	 */
+	private function link_coupon_to_event_series( $coupon_id, $series_id ) {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
+		$linked = $wpdb->query(
+			$wpdb->prepare(
+				"INSERT INTO {$wpdb->prefix}amelia_coupons_to_events (couponId, eventId)
+				 SELECT %d, id FROM {$wpdb->prefix}amelia_events WHERE id = %d OR parentId = %d",
+				$coupon_id,
+				$series_id,
+				$series_id
+			)
+		);
+
+		return (int) $linked;
 	}
 
 	/**
@@ -310,7 +356,7 @@ class GVFA_Vouchers {
 
 		$how_to = sprintf(
 			/* translators: 1: opening link tag, 2: closing link tag. */
-			__( '<strong>How to use it:</strong> go to %1$sour booking page%2$s, choose the matching service, then enter the code above at checkout. The discount covers 100%% of the service.', 'gift-vouchers-for-amelia' ),
+			__( '<strong>How to use it:</strong> go to %1$sour booking page%2$s, choose the matching service or event, then enter the code above at checkout. The voucher covers the full price of the service, or one place for an event.', 'gift-vouchers-for-amelia' ),
 			'<a href="' . esc_url( $booking_url ) . '">',
 			'</a>'
 		);

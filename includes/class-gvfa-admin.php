@@ -66,7 +66,11 @@ class GVFA_Admin {
 			? array_map( 'intval', wp_unslash( $_POST['gvfa_services'] ) )
 			: array();
 
-		$result = $this->sync->sync_selected( $checked );
+		$checked_events = isset( $_POST['gvfa_events'] ) && is_array( $_POST['gvfa_events'] )
+			? array_map( 'intval', wp_unslash( $_POST['gvfa_events'] ) )
+			: array();
+
+		$result = $this->sync->sync_selected( $checked, $checked_events );
 
 		set_transient( 'gvfa_sync_result_' . get_current_user_id(), $result, 60 );
 
@@ -111,8 +115,8 @@ class GVFA_Admin {
 
 			if ( is_array( $result ) ) {
 				$msg = sprintf(
-					/* translators: 1: created count, 2: updated count, 3: drafted count, 4: total services. */
-					__( 'Sync complete: <strong>%1$d</strong> created, <strong>%2$d</strong> updated, <strong>%3$d</strong> set to draft (out of %4$d services).', 'gift-vouchers-for-amelia' ),
+					/* translators: 1: created count, 2: updated count, 3: drafted count, 4: total services and events. */
+					__( 'Sync complete: <strong>%1$d</strong> created, <strong>%2$d</strong> updated, <strong>%3$d</strong> set to draft (out of %4$d services and events).', 'gift-vouchers-for-amelia' ),
 					(int) $result['created'],
 					(int) $result['updated'],
 					(int) ( $result['drafted'] ?? 0 ),
@@ -163,66 +167,45 @@ class GVFA_Admin {
 		echo '<hr>';
 
 		// --- Sync ---
-		echo '<h2>' . esc_html__( 'Services to offer as gift vouchers', 'gift-vouchers-for-amelia' ) . '</h2>';
+		echo '<h2>' . esc_html__( 'Services and events to offer as gift vouchers', 'gift-vouchers-for-amelia' ) . '</h2>';
 		echo '<p>' . wp_kses_post(
-			__( 'Tick the services you want to sell as gift vouchers. A virtual WooCommerce product (service name + price) is created and published for each checked service, in the "Gift Vouchers" category. <strong>Unchecking</strong> an already-published service moves its product back to <strong>draft</strong> (removed from the shop but kept — re-checking republishes it).', 'gift-vouchers-for-amelia' )
+			__( 'Tick the services and events you want to sell as gift vouchers. A virtual WooCommerce product (name + price) is created and published for each checked item, in the "Gift Vouchers" category. <strong>Unchecking</strong> an already-published item moves its product back to <strong>draft</strong> (removed from the shop but kept — re-checking republishes it).', 'gift-vouchers-for-amelia' )
 		) . '</p>';
 		echo '<p>' . esc_html__( 'Published gift voucher products:', 'gift-vouchers-for-amelia' ) . ' <strong>' . (int) $nb_products . '</strong></p>';
 
 		$services = $this->sync->get_services();
+		$events   = $this->sync->get_events();
 
-		if ( ! $services ) {
-			echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'No visible Amelia service found.', 'gift-vouchers-for-amelia' ) . '</p></div>';
+		if ( ! $services && ! $events ) {
+			echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'No visible Amelia service or upcoming event found.', 'gift-vouchers-for-amelia' ) . '</p></div>';
 		} else {
 			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 			wp_nonce_field( 'gvfa_sync' );
 			echo '<input type="hidden" name="action" value="gvfa_sync">';
 
-			echo '<table class="wp-list-table widefat fixed striped" style="max-width:760px;margin-top:10px;">';
-			echo '<thead><tr>'
-				. '<td class="check-column" style="width:2.2em;"><input type="checkbox" id="gvfa-check-all"></td>'
-				. '<th>' . esc_html__( 'Service', 'gift-vouchers-for-amelia' ) . '</th>'
-				. '<th style="width:120px;">' . esc_html__( 'Price', 'gift-vouchers-for-amelia' ) . '</th>'
-				. '<th style="width:140px;">' . esc_html__( 'Current status', 'gift-vouchers-for-amelia' ) . '</th>'
-				. '</tr></thead><tbody>';
+			echo '<h3>' . esc_html__( 'Services', 'gift-vouchers-for-amelia' ) . '</h3>';
 
-			foreach ( $services as $s ) {
-				switch ( $s->status ) {
-					case 'publish':
-						$state = '<span style="color:#008a20;">● ' . esc_html__( 'Published', 'gift-vouchers-for-amelia' ) . '</span>';
-						break;
-					case 'draft':
-						$state = '<span style="color:#996800;">● ' . esc_html__( 'Draft', 'gift-vouchers-for-amelia' ) . '</span>';
-						break;
-					case '':
-						$state = '<span style="color:#787c82;">— ' . esc_html__( 'Not created', 'gift-vouchers-for-amelia' ) . '</span>';
-						break;
-					default:
-						$state = esc_html( $s->status );
-				}
-
-				printf(
-					'<tr>'
-					. '<th scope="row" class="check-column"><input type="checkbox" class="gvfa-service" name="gvfa_services[]" value="%1$d" %2$s></th>'
-					. '<td><label>%3$s</label></td>'
-					. '<td>%4$s</td>'
-					. '<td>%5$s</td>'
-					. '</tr>',
-					(int) $s->id,
-					checked( $s->is_synced, true, false ),
-					esc_html( $s->name ),
-					wp_kses_post( wc_price( (float) $s->price ) ),
-					wp_kses_post( $state )
-				);
+			if ( $services ) {
+				$this->render_entity_table( 'gvfa_services', $services, __( 'Service', 'gift-vouchers-for-amelia' ) );
+			} else {
+				echo '<p>' . esc_html__( 'No visible Amelia service found.', 'gift-vouchers-for-amelia' ) . '</p>';
 			}
 
-			echo '</tbody></table>';
+			echo '<h3>' . esc_html__( 'Events', 'gift-vouchers-for-amelia' ) . '</h3>';
+			echo '<p class="description">' . esc_html__( 'Upcoming events only. An event voucher is worth one place (at its price, or the cheapest ticket with custom pricing) and is valid on every date of a recurring event. Products of events that are over are set to draft on the next save.', 'gift-vouchers-for-amelia' ) . '</p>';
+
+			if ( $events ) {
+				$this->render_entity_table( 'gvfa_events', $events, __( 'Event', 'gift-vouchers-for-amelia' ), true );
+			} else {
+				echo '<p>' . esc_html__( 'No upcoming Amelia event found.', 'gift-vouchers-for-amelia' ) . '</p>';
+			}
+
 			submit_button( __( 'Save selection', 'gift-vouchers-for-amelia' ) );
 			echo '</form>';
 
-			// Master checkbox toggle.
-			echo '<script>(function(){var a=document.getElementById("gvfa-check-all");if(!a)return;'
-				. 'a.addEventListener("change",function(){document.querySelectorAll(".gvfa-service").forEach(function(c){c.checked=a.checked;});});})();</script>';
+			// Master checkbox toggles (one per table).
+			echo '<script>document.querySelectorAll(".gvfa-check-all").forEach(function(a){'
+				. 'a.addEventListener("change",function(){a.closest("table").querySelectorAll("tbody input[type=checkbox]").forEach(function(c){c.checked=a.checked;});});});</script>';
 		}
 
 		if ( $page_link ) {
@@ -230,5 +213,64 @@ class GVFA_Admin {
 		}
 
 		echo '</div>';
+	}
+
+	/**
+	 * Checkbox table of services or events.
+	 *
+	 * @param string   $field     POST array name (gvfa_services / gvfa_events).
+	 * @param object[] $items     Rows from GVFA_Sync::get_services() / get_events().
+	 * @param string   $label     Name column header.
+	 * @param bool     $show_date Whether to add the "Next date" column.
+	 */
+	private function render_entity_table( $field, $items, $label, $show_date = false ) {
+		echo '<table class="wp-list-table widefat fixed striped" style="max-width:760px;margin-top:10px;">';
+		echo '<thead><tr>'
+			. '<td class="check-column" style="width:2.2em;"><input type="checkbox" class="gvfa-check-all"></td>'
+			. '<th>' . esc_html( $label ) . '</th>'
+			. ( $show_date ? '<th style="width:150px;">' . esc_html__( 'Next date', 'gift-vouchers-for-amelia' ) . '</th>' : '' )
+			. '<th style="width:120px;">' . esc_html__( 'Price', 'gift-vouchers-for-amelia' ) . '</th>'
+			. '<th style="width:140px;">' . esc_html__( 'Current status', 'gift-vouchers-for-amelia' ) . '</th>'
+			. '</tr></thead><tbody>';
+
+		foreach ( $items as $s ) {
+			switch ( $s->status ) {
+				case 'publish':
+					$state = '<span style="color:#008a20;">● ' . esc_html__( 'Published', 'gift-vouchers-for-amelia' ) . '</span>';
+					break;
+				case 'draft':
+					$state = '<span style="color:#996800;">● ' . esc_html__( 'Draft', 'gift-vouchers-for-amelia' ) . '</span>';
+					break;
+				case '':
+					$state = '<span style="color:#787c82;">— ' . esc_html__( 'Not created', 'gift-vouchers-for-amelia' ) . '</span>';
+					break;
+				default:
+					$state = esc_html( $s->status );
+			}
+
+			// Amelia stores event dates in UTC.
+			$date = $show_date && ! empty( $s->next_date )
+				? '<td>' . esc_html( wp_date( get_option( 'date_format' ), strtotime( $s->next_date . ' UTC' ) ) ) . '</td>'
+				: ( $show_date ? '<td>—</td>' : '' );
+
+			printf(
+				'<tr>'
+				. '<th scope="row" class="check-column"><input type="checkbox" name="%1$s[]" value="%2$d" %3$s></th>'
+				. '<td><label>%4$s</label></td>'
+				. '%5$s'
+				. '<td>%6$s</td>'
+				. '<td>%7$s</td>'
+				. '</tr>',
+				esc_attr( $field ),
+				(int) $s->id,
+				checked( $s->is_synced, true, false ),
+				esc_html( $s->name ),
+				$date, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
+				wp_kses_post( wc_price( (float) $s->price ) ),
+				wp_kses_post( $state )
+			);
+		}
+
+		echo '</tbody></table>';
 	}
 }

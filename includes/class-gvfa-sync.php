@@ -1,10 +1,15 @@
 <?php
 /**
- * Duplicates visible Amelia services into WooCommerce products.
+ * Duplicates visible Amelia services and upcoming events into WooCommerce
+ * products.
  *
- * The link between a product and its Amelia service is stored in the
- * `_amelia_service_id` product meta — this is what lets us generate the
- * right coupon when the product is bought.
+ * The link between a product and its Amelia entity is stored in the
+ * `_amelia_service_id` / `_amelia_event_id` product meta — this is what lets
+ * us generate the right coupon when the product is bought.
+ *
+ * Events: a recurring event is stored by Amelia as one row per occurrence,
+ * all pointing to the first one through `parentId`. A voucher product maps
+ * to a whole series, identified by its root ID (COALESCE(parentId, id)).
  *
  * @package GiftVouchersForAmelia
  */
@@ -16,6 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class GVFA_Sync {
 
 	const META_SERVICE_ID = '_amelia_service_id';
+	const META_EVENT_ID   = '_amelia_event_id';
 	const META_IS_VOUCHER = '_gvfa_voucher';
 
 	/**
@@ -42,7 +48,7 @@ class GVFA_Sync {
 		$out = array();
 
 		foreach ( $services as $service ) {
-			$product_id = $this->find_product_by_service( (int) $service->id );
+			$product_id = $this->find_product( self::META_SERVICE_ID, (int) $service->id );
 			$status     = $product_id ? get_post_status( $product_id ) : '';
 
 			$out[] = (object) array(
@@ -60,13 +66,80 @@ class GVFA_Sync {
 	}
 
 	/**
-	 * Sync the checked services and unpublish (set to draft) the unchecked ones
-	 * whose product is currently published.
+	 * List every bookable upcoming Amelia event series with its sync status.
 	 *
-	 * @param int[] $checked_ids Amelia service IDs that must be published.
+	 * An event is listed when at least one approved, publicly shown
+	 * occurrence of its series has not ended yet.
+	 *
+	 * @return array<int,object{id:int,name:string,price:string,next_date:string,product_id:int,status:string,is_synced:bool}>
+	 */
+	public function get_events() {
+		$out = array();
+
+		foreach ( $this->fetch_events() as $event ) {
+			$product_id = $this->find_product( self::META_EVENT_ID, (int) $event->id );
+			$status     = $product_id ? get_post_status( $product_id ) : '';
+
+			$out[] = (object) array(
+				'id'         => (int) $event->id,
+				'name'       => $event->name,
+				'price'      => $event->price,
+				'next_date'  => $event->next_date,
+				'product_id' => (int) $product_id,
+				'status'     => $status,
+				'is_synced'  => ( 'publish' === $status ),
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Upcoming event series (root ID, name, one-place price, next start).
+	 *
+	 * With custom pricing (ticket types) the event's own price is not used by
+	 * Amelia, so the cheapest enabled ticket of the series root is taken.
+	 *
+	 * @return object[]
+	 */
+	private function fetch_events() {
+		global $wpdb;
+
+		if ( ! GVFA_Plugin::amelia_active() ) {
+			return array();
+		}
+
+		// Amelia stores event periods in UTC.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
+		$events = $wpdb->get_results(
+			"SELECT r.id, r.name,
+			        CASE WHEN r.customPricing = 1
+			             THEN COALESCE( ( SELECT MIN( t.price ) FROM {$wpdb->prefix}amelia_events_to_tickets t WHERE t.eventId = r.id AND t.enabled = 1 ), r.price )
+			             ELSE r.price END AS price,
+			        s.next_date
+			 FROM (
+			     SELECT COALESCE( e.parentId, e.id ) AS series_id, MIN( p.periodStart ) AS next_date
+			     FROM {$wpdb->prefix}amelia_events e
+			     INNER JOIN {$wpdb->prefix}amelia_events_periods p ON p.eventId = e.id
+			     WHERE e.status = 'approved' AND e.`show` = 1 AND p.periodEnd >= UTC_TIMESTAMP()
+			     GROUP BY series_id
+			 ) s
+			 INNER JOIN {$wpdb->prefix}amelia_events r ON r.id = s.series_id
+			 ORDER BY s.next_date ASC, r.name ASC"
+		);
+
+		return $events ? $events : array();
+	}
+
+	/**
+	 * Sync the checked services/events and unpublish (set to draft) the
+	 * unchecked ones whose product is currently published.
+	 *
+	 * @param int[] $checked_ids       Amelia service IDs that must be published.
+	 * @param int[] $checked_event_ids Amelia event series (root) IDs that must be published.
 	 * @return array{created:int, updated:int, drafted:int, total:int, errors:string[]}
 	 */
-	public function sync_selected( $checked_ids ) {
+	public function sync_selected( $checked_ids, $checked_event_ids = array() ) {
 		global $wpdb;
 
 		$result = array(
@@ -89,75 +162,36 @@ class GVFA_Sync {
 			return $result;
 		}
 
-		$checked_ids = array_map( 'intval', (array) $checked_ids );
+		$checked_ids       = array_map( 'intval', (array) $checked_ids );
+		$checked_event_ids = array_map( 'intval', (array) $checked_event_ids );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
 		$services = $wpdb->get_results(
 			"SELECT id, name, price FROM {$wpdb->prefix}amelia_services WHERE status = 'visible' ORDER BY name ASC"
 		);
+		$events   = $this->fetch_events();
 
-		if ( ! $services ) {
-			$result['errors'][] = __( 'No visible Amelia service found.', 'gift-vouchers-for-amelia' );
+		if ( ! $services && ! $events ) {
+			$result['errors'][] = __( 'No visible Amelia service or upcoming event found.', 'gift-vouchers-for-amelia' );
 			return $result;
 		}
 
-		foreach ( $services as $service ) {
-			++$result['total'];
+		foreach ( (array) $services as $service ) {
+			$this->sync_one( self::META_SERVICE_ID, $service, in_array( (int) $service->id, $checked_ids, true ), $category_id, $result );
+		}
 
-			$sid         = (int) $service->id;
-			$existing_id = $this->find_product_by_service( $sid );
-			$checked     = in_array( $sid, $checked_ids, true );
+		$listed_event_ids = array();
 
-			if ( $checked ) {
-				$is_new  = ! $existing_id;
-				$product = $existing_id ? wc_get_product( $existing_id ) : new WC_Product_Simple();
+		foreach ( $events as $event ) {
+			$listed_event_ids[] = (int) $event->id;
+			$this->sync_one( self::META_EVENT_ID, $event, in_array( (int) $event->id, $checked_event_ids, true ), $category_id, $result );
+		}
 
-				if ( ! $product ) {
-					$product = new WC_Product_Simple();
-					$is_new  = true;
-				}
-
-				$product->set_name( $service->name );
-				$product->set_regular_price( (string) $service->price );
-				$product->set_price( (string) $service->price );
-				$product->set_virtual( true );
-				$product->set_sold_individually( true ); // one voucher per line
-				$product->set_catalog_visibility( 'visible' );
-				$product->set_status( 'publish' ); // (re)publish when checked
-
-				if ( $is_new ) {
-					$product->set_category_ids( array( $category_id ) );
-				}
-
-				$product->update_meta_data( self::META_SERVICE_ID, (string) $sid );
-				$product->update_meta_data( self::META_IS_VOUCHER, 'yes' );
-
-				$product_id = $product->save();
-
-				if ( ! $product_id ) {
-					$result['errors'][] = sprintf(
-						/* translators: 1: service ID, 2: service name. */
-						__( 'Failed to save the product for service #%1$d (%2$s).', 'gift-vouchers-for-amelia' ),
-						$sid,
-						$service->name
-					);
-					continue;
-				}
-
-				if ( $is_new ) {
-					++$result['created'];
-				} else {
-					++$result['updated'];
-				}
-			} elseif ( $existing_id ) {
-				// Unchecked: unpublish the product if it is currently live.
-				$product = wc_get_product( $existing_id );
-
-				if ( $product && $product->get_status() === 'publish' ) {
-					$product->set_status( 'draft' );
-					$product->save();
-					++$result['drafted'];
-				}
+		// Events that are over (or cancelled/hidden) no longer appear in the
+		// list: unpublish their products so they cannot be bought any more.
+		foreach ( $this->find_published_products( self::META_EVENT_ID ) as $product_id => $event_id ) {
+			if ( ! in_array( $event_id, $listed_event_ids, true ) ) {
+				$this->unpublish( $product_id, $result );
 			}
 		}
 
@@ -165,10 +199,91 @@ class GVFA_Sync {
 	}
 
 	/**
-	 * @param int $service_id
+	 * Create/update/unpublish the voucher product of one Amelia entity.
+	 *
+	 * @param string $meta_key    META_SERVICE_ID or META_EVENT_ID.
+	 * @param object $entity      Row with id, name, price.
+	 * @param bool   $checked     Whether the product must be published.
+	 * @param int    $category_id Gift vouchers product category.
+	 * @param array  $result      Sync counters, updated in place.
+	 */
+	private function sync_one( $meta_key, $entity, $checked, $category_id, &$result ) {
+		++$result['total'];
+
+		$id          = (int) $entity->id;
+		$existing_id = $this->find_product( $meta_key, $id );
+
+		if ( ! $checked ) {
+			if ( $existing_id ) {
+				$this->unpublish( $existing_id, $result );
+			}
+			return;
+		}
+
+		$is_new  = ! $existing_id;
+		$product = $existing_id ? wc_get_product( $existing_id ) : new WC_Product_Simple();
+
+		if ( ! $product ) {
+			$product = new WC_Product_Simple();
+			$is_new  = true;
+		}
+
+		$product->set_name( $entity->name );
+		$product->set_regular_price( (string) $entity->price );
+		$product->set_price( (string) $entity->price );
+		$product->set_virtual( true );
+		$product->set_sold_individually( true ); // one voucher per line
+		$product->set_catalog_visibility( 'visible' );
+		$product->set_status( 'publish' ); // (re)publish when checked
+
+		if ( $is_new ) {
+			$product->set_category_ids( array( $category_id ) );
+		}
+
+		$product->update_meta_data( $meta_key, (string) $id );
+		$product->update_meta_data( self::META_IS_VOUCHER, 'yes' );
+
+		$product_id = $product->save();
+
+		if ( ! $product_id ) {
+			$result['errors'][] = sprintf(
+				/* translators: 1: Amelia service or event ID, 2: its name. */
+				__( 'Failed to save the product for #%1$d (%2$s).', 'gift-vouchers-for-amelia' ),
+				$id,
+				$entity->name
+			);
+			return;
+		}
+
+		if ( $is_new ) {
+			++$result['created'];
+		} else {
+			++$result['updated'];
+		}
+	}
+
+	/**
+	 * Set a product back to draft if it is currently live.
+	 *
+	 * @param int   $product_id
+	 * @param array $result Sync counters, updated in place.
+	 */
+	private function unpublish( $product_id, &$result ) {
+		$product = wc_get_product( $product_id );
+
+		if ( $product && $product->get_status() === 'publish' ) {
+			$product->set_status( 'draft' );
+			$product->save();
+			++$result['drafted'];
+		}
+	}
+
+	/**
+	 * @param string $meta_key   META_SERVICE_ID or META_EVENT_ID.
+	 * @param int    $entity_id  Amelia service ID or event series ID.
 	 * @return int Product ID or 0.
 	 */
-	public function find_product_by_service( $service_id ) {
+	public function find_product( $meta_key, $entity_id ) {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Amelia exposes no public API; a direct query on its custom tables is required here.
@@ -180,12 +295,39 @@ class GVFA_Sync {
                  WHERE pm.meta_key = %s AND pm.meta_value = %d
                    AND p.post_type = 'product' AND p.post_status != 'trash'
                  LIMIT 1",
-				self::META_SERVICE_ID,
-				$service_id
+				$meta_key,
+				$entity_id
 			)
 		);
 
 		return $post_id ? (int) $post_id : 0;
+	}
+
+	/**
+	 * @param string $meta_key META_SERVICE_ID or META_EVENT_ID.
+	 * @return array<int,int> Published product ID => linked Amelia ID.
+	 */
+	private function find_published_products( $meta_key ) {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Lookup by meta key on published products only.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT pm.post_id, pm.meta_value
+                 FROM {$wpdb->postmeta} pm
+                 INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+                 WHERE pm.meta_key = %s AND p.post_type = 'product' AND p.post_status = 'publish'",
+				$meta_key
+			)
+		);
+
+		$out = array();
+
+		foreach ( (array) $rows as $row ) {
+			$out[ (int) $row->post_id ] = (int) $row->meta_value;
+		}
+
+		return $out;
 	}
 
 	/**

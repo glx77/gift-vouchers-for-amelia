@@ -3,7 +3,7 @@
  * Plugin Name:       Gift Vouchers for Amelia
  * Plugin URI:        https://github.com/glx77/gift-vouchers-for-amelia
  * Description:        Sell gift vouchers for your Amelia services through WooCommerce. Each paid order automatically generates a single-use 100% Amelia coupon restricted to the purchased service.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Author:            Glow with Lilou
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GVFA_VERSION', '1.0.0' );
+define( 'GVFA_VERSION', '1.1.0' );
 define( 'GVFA_FILE', __FILE__ );
 define( 'GVFA_DIR', plugin_dir_path( __FILE__ ) );
 define( 'GVFA_URL', plugin_dir_url( __FILE__ ) );
