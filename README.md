@@ -1,6 +1,6 @@
 # Gift Vouchers for Amelia
 
-Sell gift vouchers for your [Amelia](https://wpamelia.com/) services through WooCommerce. Every paid order automatically creates a **100 % Amelia coupon** restricted to the purchased service, emails the code to the buyer, and lists it on the order.
+Sell gift vouchers for your [Amelia](https://wpamelia.com/) services and events through WooCommerce. Every paid order automatically creates a **single-use Amelia coupon** restricted to the purchased service or event, emails the code to the buyer, and lists it on the order.
 
 > Requires **WooCommerce** and the **Amelia** booking plugin.
 
@@ -12,9 +12,10 @@ Sell gift vouchers for your [Amelia](https://wpamelia.com/) services through Woo
 Customer buys a voucher product   ──►  WooCommerce order (paid)
         │
         ▼
-For each purchased service, the plugin creates an Amelia coupon:
-   • 100 % discount
-   • restricted to that service
+For each purchased voucher, the plugin creates an Amelia coupon:
+   • service: 100 % discount, restricted to that service
+   • event:   fixed deduction worth one place, restricted to
+              every occurrence of that event series
    • single use (limit = 1)
    • expires after N months (default 6)
         │
@@ -22,15 +23,18 @@ For each purchased service, the plugin creates an Amelia coupon:
 Code emailed to the buyer  +  added to the admin "New order" email  +  saved on the order
         │
         ▼
-Recipient books the service in Amelia and enters the code  ──►  0 € to pay
+Recipient books the service/event in Amelia and enters the code  ──►  0 € to pay
 ```
 
-Amelia natively enforces the expiry date, the single-use limit (it counts the bookings that reference the coupon) and the service restriction, so the plugin only has to create the coupon rows correctly.
+Amelia natively enforces the expiry date, the single-use limit (it counts the bookings that reference the coupon) and the service/event restriction, so the plugin only has to create the coupon rows correctly.
 
 ### Design notes
 
 - **One code per service purchased** (and per quantity unit). An Amelia coupon is consumed by a single booking and holds no running balance, so covering two services requires two codes.
-- **100 % discount** (not a fixed amount): the voucher always covers the whole service, regardless of later price changes.
+- **Services: 100 % discount** (not a fixed amount): the voucher always covers the whole service, regardless of later price changes.
+- **Events: fixed deduction = one place.** Amelia multiplies the event price by the number of persons booked, so a 100 % discount would make every extra place free too. The deduction is the product price at purchase time (event price, or the cheapest enabled ticket with custom pricing).
+- **Recurring events**: Amelia stores one `amelia_events` row per occurrence (`parentId` = first occurrence) and checks the coupon against the booked occurrence, so the coupon is linked to every row of the series in `amelia_coupons_to_events`. A product maps to the series root ID (`_amelia_event_id` meta).
+- Only events with an approved, visible occurrence that has not ended are listed. Published products of events that drop out of that list are set to draft on the next save.
 - Voucher products are **virtual** and **sold individually** (quantity locked to 1, enforced server-side via the `woocommerce_is_sold_individually` filter).
 - Amelia stores/compares coupon dates in **UTC**; the plugin writes `expirationDate` in UTC and leaves `startDate` null (valid immediately).
 
@@ -50,7 +54,7 @@ Amelia natively enforces the expiry date, the single-use limit (it counts the bo
 2. Activate **Gift Vouchers for Amelia** in *Plugins*.
 3. Open **WooCommerce → Gift Vouchers** and:
    - set the **validity duration** (default 6 months) and the **booking page URL**;
-   - tick the services you want to sell as vouchers and **save** (this creates/publishes one WooCommerce product per checked service).
+   - tick the services and events you want to sell as vouchers and **save** (this creates/publishes one WooCommerce product per checked item).
 4. The public listing page is created automatically at `/gift-vouchers/`.
 
 ## Configuration
